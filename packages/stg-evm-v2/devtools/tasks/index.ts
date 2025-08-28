@@ -74,7 +74,13 @@ import {
 } from '@stargatefinance/stg-devtools-v2'
 import { subtask, task } from 'hardhat/config'
 
-import { createConnectedContractFactory, inheritTask, types } from '@layerzerolabs/devtools-evm-hardhat'
+import {
+    SUBTASK_LZ_SIGN_AND_SEND,
+    createConnectedContractFactory,
+    createSignerFactory,
+    inheritTask,
+    types,
+} from '@layerzerolabs/devtools-evm-hardhat'
 import { createLogger } from '@layerzerolabs/lz-utilities'
 import {
     SUBTASK_LZ_OAPP_CONFIG_LOAD,
@@ -103,6 +109,8 @@ import {
     TASK_STG_WIRE_TOKEN_MESSAGING_INITIALIZE_STORAGE,
     TASK_STG_WIRE_TREASURER,
 } from './constants'
+
+import type { SignAndSendTaskArgs } from '@layerzerolabs/devtools-evm-hardhat/tasks'
 
 const wireTask = inheritTask(TASK_LZ_OAPP_WIRE)
 
@@ -429,6 +437,21 @@ wireTask(TASK_STG_WIRE_CIRCLE_TOKEN_INITIALIZE_MINTER)
                     configurator: initializeMinters,
                     sdkFactory: createCircleFiatTokenFactory(createConnectedContractFactory()),
                 })
+        )
+
+        const fancySigner = (signer: any) => {
+            console.log('------------------FANCY SIGNER------------')
+            return createSignerFactory(signer)
+        }
+
+        const signer = args.signer
+
+        // const fancySigner = createSignerFactory(signer)
+        subtask(SUBTASK_LZ_SIGN_AND_SEND, 'Sign OFT transactions', (args: SignAndSendTaskArgs, _hre, runSuper) =>
+            runSuper({
+                ...args,
+                createSigner: fancySigner(signer),
+            })
         )
 
         return hre.run(TASK_LZ_OAPP_WIRE, args)

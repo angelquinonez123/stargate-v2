@@ -178,6 +178,11 @@ deploy-testnet: build deploy
 # This target will configure the testnet contracts
 # 
 
+cc: CONFIG_BASE_PATH=./devtools/config/testnet
+cc:
+	$(CONFIGURE_CIRCLE_TOKEN_INITIALIZE_MINTERS) $(CONFIGURE_ARGS_COMMON) --oapp-config $(CONFIG_BASE_PATH)/usdc-token.config.ts --signer deployer --safe --token-name usdc --log-level verbose
+
+
 configure-testnet: CONFIG_BASE_PATH=./devtools/config/testnet
 configure-testnet:
 	# Validate RPCs
