@@ -831,6 +831,9 @@ const getRpcUrl = (chainName: string): string | null => {
 const updateNetworkRpcUrls = (networks: NetworksUserConfig): NetworksUserConfig => {
     return Object.fromEntries(
         Object.entries(networks).map(([networkName, networkConfig]) => {
+            if (networkName === 'plasma-mainnet') {
+                return [networkName, networkConfig]
+            }
             if (networkConfig && 'url' in networkConfig) {
                 const dynamicUrl = getRpcUrl(networkName)
                 return [networkName, { ...networkConfig, url: dynamicUrl ?? networkConfig.url }]
