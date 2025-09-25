@@ -1,0 +1,4 @@
+pnpm install
+pnpm clean
+pnpm build
+pnpm test
